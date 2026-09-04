@@ -1,0 +1,12 @@
+.env
+*.pyc
+__pycache__/
+*.ics
+debug_*.json
+debug_*.html
+data/
+.venv/
+venv/
+*.egg-info/
+dist/
+build/

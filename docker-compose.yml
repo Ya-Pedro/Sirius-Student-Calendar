@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  schedule-sync:
+    image: yapedro/sirius-schedule:latest
+    container_name: sirius-schedule
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: sirius-tunnel
+    restart: unless-stopped
+    command: tunnel --protocol http2 --config /etc/cloudflared/config.yml run
+    volumes:
+      - ~/.cloudflared:/etc/cloudflared
+      - ./cloudflared_config.yml:/etc/cloudflared/config.yml
+    depends_on:
+      - schedule-sync
+
