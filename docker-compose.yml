@@ -26,8 +26,8 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ~/my.crt:/etc/ssl/certs/fullchain.pem:ro
-      - ~/my.key:/etc/ssl/private/privkey.pem:ro
+      - ./certbot/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
+      - ./certbot/privkey.pem:/etc/ssl/private/privkey.pem:ro
     depends_on:
       - schedule-sync
       - schedule-sync-k0409
