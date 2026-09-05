@@ -1,10 +1,12 @@
 .env
+.env.k0409
 *.pyc
 __pycache__/
 *.ics
 debug_*.json
 debug_*.html
 data/
+data-k0409/
 .venv/
 venv/
 *.egg-info/

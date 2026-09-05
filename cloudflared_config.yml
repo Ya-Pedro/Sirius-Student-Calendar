@@ -1,7 +1,0 @@
-tunnel: ac205f19-7bb1-4a97-ac90-b9d941721eac
-credentials-file: /etc/cloudflared/ac205f19-7bb1-4a97-ac90-b9d941721eac.json
-
-ingress:
-  - hostname: schedule.ittori.ru
-    service: http://schedule-sync:8080
-  - service: http_status:404

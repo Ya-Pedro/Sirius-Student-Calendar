@@ -12,14 +12,13 @@ services:
     volumes:
       - ./data:/app/data
 
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: sirius-tunnel
+  schedule-sync-k0409:
+    image: yapedro/sirius-schedule:latest
+    container_name: sirius-schedule-k0409
     restart: unless-stopped
-    command: tunnel --protocol http2 --config /etc/cloudflared/config.yml run
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env.k0409
     volumes:
-      - ~/.cloudflared:/etc/cloudflared
-      - ./cloudflared_config.yml:/etc/cloudflared/config.yml
-    depends_on:
-      - schedule-sync
-
+      - ./data-k0409:/app/data
