@@ -88,7 +88,7 @@ async def root():
         "service": "Sirius Schedule Sync",
         "group": config.GROUP_NAME,
         "calendar_name": config.CALENDAR_NAME,
-        "subscribe_url": "/schedule.ics",
+        "subscribe_url": f"/{config.ICS_OUTPUT_PATH}",
         "status": "running",
         "last_update": _last_update.isoformat() if _last_update else None,
         "events_count": _events_count,
@@ -103,7 +103,7 @@ async def root():
     }
 
 
-@app.get("/schedule.ics")
+@app.get(f"/{config.ICS_OUTPUT_PATH}")
 async def get_ics():
     """
     ICS-файл для подписки в Apple Calendar.
