@@ -2,18 +2,16 @@
 
 Сервис синхронизации расписания Университета Сириус с Apple Calendar / Google Calendar.
 
-Отдаёт ICS-фид по HTTP для подписки в любом календарном приложении.
+## Группы и URL
 
-## Группы и порты
+| Группа   | URL                                              |
+|----------|--------------------------------------------------|
+| К0609-23 | `https://pedro.ittori.ru:8080/schedule.ics`      |
+| К0409-24 | `https://pedro.ittori.ru:8081/schedule.ics`      |
 
-| Группа    | Порт | URL расписания             |
-|-----------|------|----------------------------|
-| К0609-23  | 8080 | `http://<IP>:8080/schedule.ics` |
-| К0409-24  | 8081 | `http://<IP>:8081/schedule.ics` |
+## Установка на сервер
 
-## Быстрый старт на VPS
-
-### 1. Установить Docker и Docker Compose
+### 1. Установить Docker
 
 ```bash
 curl -fsSL https://get.docker.com | sh
@@ -26,26 +24,33 @@ git clone https://github.com/Ya-Pedro/Sirius-Student-Calendar.git
 cd Sirius-Student-Calendar
 ```
 
-### 3. Настроить конфиги
-
-Файлы `.env` и `.env.k0409` уже настроены. При необходимости отредактировать:
+### 3. Настроить .env файлы
 
 ```bash
 nano .env
 nano .env.k0409
 ```
 
-### 4. Запустить
+### 4. Проброс портов на роутере
+
+| Внешний порт | Внутренний порт | Протокол | Назначение        |
+|--------------|-----------------|----------|--------------------|
+| 80           | 80              | TCP      | Let's Encrypt      |
+| 8080         | 8080            | TCP      | HTTPS К0609-23     |
+| 8081         | 8081            | TCP      | HTTPS К0409-24     |
+
+### 5. Получить SSL-сертификат и запустить
 
 ```bash
-docker-compose up -d
+chmod +x init-ssl.sh
+./init-ssl.sh
 ```
 
-### 5. Проверить
+### 6. Продление сертификата
 
 ```bash
-curl http://localhost:8080/
-curl http://localhost:8081/
+docker-compose run --rm certbot renew
+docker-compose restart nginx
 ```
 
 ## Подписка на календарь
@@ -55,13 +60,13 @@ curl http://localhost:8081/
 1. Настройки → Календарь → Учётные записи
 2. Добавить учётную запись → Другое
 3. Подписной календарь
-4. Вставить URL: `http://<IP>:8080/schedule.ics` (К0609-23) или `http://<IP>:8081/schedule.ics` (К0409-24)
+4. URL: `https://pedro.ittori.ru:8080/schedule.ics` или `https://pedro.ittori.ru:8081/schedule.ics`
 
 ### Google Calendar
 
-1. Открыть calendar.google.com
-2. Слева: Другие календари → + → По URL
-3. Вставить URL: `http://<IP>:8080/schedule.ics` или `http://<IP>:8081/schedule.ics`
+1. calendar.google.com
+2. Другие календари → + → По URL
+3. Вставить URL
 
 ### macOS Calendar
 
@@ -70,41 +75,43 @@ curl http://localhost:8081/
 
 ## API
 
-| Метод | URL             | Описание                          |
-|-------|-----------------|-----------------------------------|
-| GET   | `/`             | Информация о сервисе              |
-| GET   | `/schedule.ics` | ICS-файл для подписки             |
-| GET   | `/health`       | Healthcheck                       |
-| GET   | `/status`       | Статус последнего обновления      |
-| POST  | `/refresh`      | Принудительное обновление         |
+| Метод | URL             | Описание                     |
+|-------|-----------------|------------------------------|
+| GET   | `/`             | Информация о сервисе         |
+| GET   | `/schedule.ics` | ICS-файл для подписки        |
+| GET   | `/health`       | Healthcheck                  |
+| GET   | `/status`       | Статус последнего обновления |
+| POST  | `/refresh`      | Принудительное обновление    |
 
 ## Управление
 
 ```bash
 docker-compose up -d
 docker-compose down
+docker-compose logs -f nginx
 docker-compose logs -f schedule-sync
 docker-compose logs -f schedule-sync-k0409
-docker-compose restart schedule-sync
-docker-compose restart schedule-sync-k0409
+docker-compose restart
 ```
 
 ## Добавление новой группы
 
-1. Создать файл `.env.<имя>` с нужным `GROUP_NAME`
-2. Добавить сервис в `docker-compose.yml` с новым портом и ссылкой на этот env-файл
-3. `docker-compose up -d`
+1. Создать `.env.<имя>` с нужным `GROUP_NAME`
+2. Добавить сервис в `docker-compose.yml`
+3. Добавить блок `server` в `nginx.conf` с новым портом
+4. Пробросить порт на роутере
+5. `docker-compose up -d && docker-compose restart nginx`
 
 ## Параметры .env
 
-| Параметр                | Значение по умолчанию | Описание                              |
-|-------------------------|-----------------------|---------------------------------------|
-| `GROUP_NAME`            | К0609-23              | Название группы                       |
-| `WEEKS_AHEAD`           | 4                     | Недель вперёд                         |
-| `WEEKS_BEHIND`          | 1                     | Недель назад                          |
-| `UPDATE_INTERVAL_MINUTES` | 30                  | Интервал обновления (мин)             |
-| `SERVER_HOST`           | 0.0.0.0               | Хост сервера                          |
-| `SERVER_PORT`           | 8080                  | Порт внутри контейнера                |
-| `TIMEZONE`              | Europe/Moscow         | Часовой пояс                          |
-| `LOG_LEVEL`             | INFO                  | Уровень логов                         |
-| `REQUEST_TIMEOUT`       | 60                    | Таймаут запросов (сек)                |
+| Параметр                  | По умолчанию  | Описание                |
+|---------------------------|---------------|-------------------------|
+| `GROUP_NAME`              | К0609-23      | Название группы         |
+| `WEEKS_AHEAD`             | 4             | Недель вперёд           |
+| `WEEKS_BEHIND`            | 1             | Недель назад            |
+| `UPDATE_INTERVAL_MINUTES` | 30            | Интервал обновления     |
+| `SERVER_HOST`             | 0.0.0.0       | Хост сервера            |
+| `SERVER_PORT`             | 8080          | Порт внутри контейнера  |
+| `TIMEZONE`                | Europe/Moscow | Часовой пояс            |
+| `LOG_LEVEL`               | INFO          | Уровень логов           |
+| `REQUEST_TIMEOUT`         | 60            | Таймаут запросов (сек)  |

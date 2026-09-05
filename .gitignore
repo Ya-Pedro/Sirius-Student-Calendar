@@ -1,5 +1,6 @@
 .env
 .env.k0409
+certbot/
 *.pyc
 __pycache__/
 *.ics
