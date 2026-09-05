@@ -17,17 +17,20 @@ services:
     volumes:
       - ./data-k0409:/app/data
 
-  nginx:
-    image: nginx:alpine
-    container_name: sirius-nginx
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: sirius-tunnel
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
+    command: tunnel --protocol http2 --config /etc/cloudflared/config.yml run
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ~/my.crt:/etc/ssl/certs/fullchain.pem:ro
-      - ~/my.key:/etc/ssl/private/privkey.pem:ro
+      - ~/.cloudflared:/etc/cloudflared:ro
+      - ./cloudflared_config.yml:/etc/cloudflared/config.yml:ro
     depends_on:
       - schedule-sync
       - schedule-sync-k0409
+
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1350
